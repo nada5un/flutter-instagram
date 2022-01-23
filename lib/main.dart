@@ -21,6 +21,20 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   var tab = 0;
+  var data = [];
+
+  getData() async{
+    var request = await http.get(Uri.parse('https://codingapple1.github.io/app/data.json'));
+    setState(() {
+      data = jsonDecode(request.body);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +51,9 @@ class _MyAppState extends State<MyApp> {
         ]
       ),
       body: [
-        Home(),Text("샵페이지")][tab],
+        Home(
+          data:data
+        ),Text("샵페이지")][tab],
       bottomNavigationBar: BottomNavigationBar(
         showSelectedLabels: false,   // <-- HERE
         showUnselectedLabels: false, // <-- AND HERE
@@ -57,16 +73,22 @@ class _MyAppState extends State<MyApp> {
 
 //홈화면
 class Home extends StatelessWidget {
-  const Home({Key? key}) : super(key: key);
+  Home({
+    Key? key,
+    this.data
+  }) : super(key: key);
+
+  final data;
 
   @override
   Widget build(BuildContext context) {
+    print(data);
     return ListView.builder(
-        itemCount: 3,
+        itemCount: data.length,
         itemBuilder: (c,i){
           return Column(
               children: [
-                Image.network('https://codingapple1.github.io/app/car0.png'),
+                Image.network(data[i]["image"]),
                 Container(
                   constraints: BoxConstraints(maxWidth: 600),
                   padding: EdgeInsets.all(20),
@@ -74,9 +96,9 @@ class Home extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("좋아요100",style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text("글쓴이"),
-                      Text("글내용")
+                      Text("좋아요 ${data[i]["likes"]}",style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(data[i]["user"]),
+                      Text(data[i]["content"])
                     ],
                   ),
                 )
