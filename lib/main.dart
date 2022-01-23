@@ -1,8 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import "./style.dart" as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import "package:flutter/rendering.dart";
+import "package:image_picker/image_picker.dart";
+import "dart:io";
 
 void main() {
   runApp(
@@ -23,6 +27,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   var tab = 0;
   var data = [];
+  var userImage;
+  var userContent;
+
   //0:false , 1:true
   int isScrollDown = 0;
 
@@ -42,8 +49,27 @@ class _MyAppState extends State<MyApp> {
     data.add(value);
   });
 
+  createPost(){
+    var myData = {
+      "id":data.length+1,
+      "image":userImage,
+      "likes":0,
+      "date":"july 1",
+      "content":userContent,
+      "liked":0,
+      "user":"daeun Sung"
+    };
+    setState(() {
+      data.insert(0,myData);
+    });
+  }
+
   changeTab(int value)=>setState((){
     tab = value;
+  });
+
+  setUserContent(value)=>setState((){
+    userContent = value;
   });
 
   changeBottomState(int value)=>setState((){
@@ -65,7 +91,22 @@ class _MyAppState extends State<MyApp> {
         actions: [
           IconButton(
               icon:Icon(Icons.add_box_outlined),
-              onPressed: (){},
+              onPressed: () async{
+                var picker = ImagePicker();
+                var image = await picker.pickImage(source: ImageSource.gallery);
+                if (image!=null){
+                  setState(() {
+                    userImage = File(image.path);
+                  });
+                }
+                Navigator.push(context,
+                  MaterialPageRoute(builder: (context)=>Upload(
+                      userImage:userImage,
+                      createPost:createPost,
+                      setUserContent:setUserContent
+                  ))
+                );
+              },
               iconSize: 30,
           )
         ]
@@ -142,7 +183,7 @@ class _HomeState extends State<Home> {
           itemBuilder: (c,i){
             return Column(
                 children: [
-                  Image.network(widget.data[i]["image"]),
+                  widget.data[i]["image"].runtimeType == String?Image.network(widget.data[i]["image"]):Image.file(widget.data[i]["image"]),
                   Container(
                     constraints: BoxConstraints(maxWidth: 600),
                     padding: EdgeInsets.all(20),
@@ -194,6 +235,51 @@ class _BottomState extends State<Bottom> {
         BottomNavigationBarItem(label:"홈",icon: Icon(Icons.home_outlined)),
         BottomNavigationBarItem(label: "샵",icon: Icon(Icons.shopping_bag_outlined))
       ],
+    );
+  }
+}
+
+class Upload extends StatefulWidget {
+  Upload({
+    Key? key,this.userImage,
+    required this.createPost,
+    required this.setUserContent
+  }) : super(key: key);
+
+  final userImage;
+  final Function() createPost;
+  final Function(String value) setUserContent;
+
+  @override
+  State<Upload> createState() => _UploadState();
+}
+
+class _UploadState extends State<Upload> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+          actions: [
+            IconButton(onPressed: (){Navigator.pop(context);}, icon: Icon(Icons.close)),
+            IconButton(onPressed: (){
+              widget.createPost();
+              Navigator.pop(context);
+            },icon: Icon(Icons.send))
+          ],
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("이미지업로드화면"),
+          Image.file(widget.userImage,width: 100,),
+          TextField(
+            onChanged: (text){
+              widget.setUserContent(text);
+            },
+          ),
+        ],
+      ),
     );
   }
 }
