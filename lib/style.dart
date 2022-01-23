@@ -11,6 +11,9 @@ var theme = ThemeData(
     //         textStyle: TextStyle(color: Colors.black)
     //     )
     // ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        selectedItemColor: Colors.black,
+    ),
     //아이콘 스타일 통일
     appBarTheme: AppBarTheme(
         color: Colors.white,
